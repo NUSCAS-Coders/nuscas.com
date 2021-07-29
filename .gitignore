@@ -1,0 +1,6 @@
+server/.env
+server/.env.production
+mongo/
+server/package-lock.json
+client/package-lock.json
+server/dist/

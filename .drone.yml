@@ -1,0 +1,42 @@
+kind: pipeline
+type: exec
+name: default
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+- name: down-app
+  failure: ignore
+  commands:
+  - cd /home/mushmers/nuscas.com
+  - git pull
+  - docker-compose down
+  
+- name: stop-be
+  failure: ignore
+  commands:
+  - docker stop nuscas-api
+
+- name: stop-fe
+  failure: ignore
+  commands:
+  - docker stop nuscas-fe
+
+- name: rm-be
+  failure: ignore
+  commands:
+  - docker rm nuscas-api
+
+- name: rm-fe
+  failure: ignore
+  commands:
+  - docker rm nuscas-fe
+
+- name: start-app
+  commands:
+  - cd /home/mushmers/nuscas.com
+  - pwd
+  - docker-compose build
+  - docker-compose up -d

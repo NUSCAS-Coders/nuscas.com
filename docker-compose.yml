@@ -1,0 +1,65 @@
+version: "3"
+services:
+  mongo:
+    image: mongo
+    volumes:
+      - ./mongo:/data/db
+
+  nuscas-api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    env_file: ./server/.env.production
+    ports:
+      - 3000:3000
+    container_name: nuscas-api
+
+  nuscas-fe:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - 80:80
+    container_name: nuscas-fe
+
+  nginx-proxy:
+    depends_on:
+      - nuscas-fe
+      - nuscas-api
+    image: nginx:alpine
+    volumes:
+      - web-root:/var/www/html
+      - $PWD/nginx.conf:/etc/nginx/conf.d/default.conf
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - dhparam:/etc/ssl/certs
+    ports:
+      - 8080:80
+      - 443:443
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - web-root:/var/www/html
+    depends_on:
+      - nginx-proxy
+    command: certonly --webroot --webroot-path=/var/www/html --email me@lucasfoosq.com --agree-tos --no-eff-email --force-renewal -d nuscas.com  -d www.nuscas.com
+
+volumes:
+  certbot-etc:
+  certbot-var:
+  web-root:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/mushmers/nuscas.com/server/
+      o: bind
+  dhparam:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/mushmers/nuscas.com/dhparam/
+      o: bind
